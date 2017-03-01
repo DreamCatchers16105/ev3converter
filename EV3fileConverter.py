@@ -6,19 +6,23 @@ import zlib
 from tkinter import filedialog
 from tkinter import ttk
 
-
 class MainApplication(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
+        ''' Initialize the class'''
         tk.Frame.__init__(self, parent, *args, **kwargs)
-#        root.iconbitmap('images/Main_icon.ico')
+        root.iconbitmap('images/Main_icon.ico')
         self.parent = parent
         self.ev3FileName = ""
         self.ev3DirName = ""
         self.expandedFiles = []
+        self.fileMenu1 = ""
+        self.fileMenu2 = ""
+        self.fileMenu3 = ""
         self.parent.geometry("875x480+400+400")
         self.initUI()
 
     def initUI(self):
+        '''Buttons and menu definition '''
         self.parent.title("EV3 File Converter")
 
         ## MENU
@@ -77,16 +81,19 @@ class MainApplication(tk.Frame):
 
     def OnDoubleClick(self, event):
         newev3FileName = filedialog.asksaveasfile(mode='w', defaultextension=".ev3")
-        self.ev3FileName = newev3FileName.name
+        try:
+            self.ev3FileName = newev3FileName.name
 
-        self.ev3Tree.delete(*self.ev3Tree.get_children())
-        self.ev3Tree.insert('', 'end', text=self.ev3FileName, open=True)
-        if os.stat(self.ev3FileName).st_size > 0:
-            self.button_right.config(state='normal')
-            self.ev3TreeLabel.config(bg='green')
-        else:
-            self.button_right.config(state='disabled')
-            self.ev3TreeLabel.config(bg='yellow')
+            self.ev3Tree.delete(*self.ev3Tree.get_children())
+            self.ev3Tree.insert('', 'end', text=self.ev3FileName, open=True)
+            if os.stat(self.ev3FileName).st_size > 0:
+                self.button_right.config(state='normal')
+                self.ev3TreeLabel.config(bg='green')
+            else:
+                self.button_right.config(state='disabled')
+                self.ev3TreeLabel.config(bg='yellow')
+        except:
+            pass
 
     def SUBS(self, path, parent):
         for p in os.listdir(path):
@@ -98,27 +105,33 @@ class MainApplication(tk.Frame):
     def onOpenFile(self):
         self.ev3FileName = filedialog.askopenfilename(filetypes=(("EV3 files", "*.ev3"), ("All files", ("*.*"))))
         self.ev3Tree.insert('', 'end', text=self.ev3FileName, open=True)
-        if os.stat(self.ev3FileName).st_size > 0:
-            self.button_right.config(state='normal')
-            self.fileMenu2.entryconfig("EV3 file to Expand", state="normal")
-            self.ev3TreeLabel.config(bg='green')
+        try:
+            if os.stat(self.ev3FileName).st_size > 0:
+                self.button_right.config(state='normal')
+                self.fileMenu2.entryconfig("EV3 file to Expand", state="normal")
+                self.ev3TreeLabel.config(bg='green')
+        except:
+            pass
 
     def onOpenDir(self):
         self.ev3DirName = filedialog.askdirectory()
 
-        for file in os.listdir(self.ev3DirName):
-            if file.startswith("."):
-                pass
-            else:
-                self.expandedFiles.append(file)
+        try:
+            for file in os.listdir(self.ev3DirName):
+                if file.startswith("."):
+                    pass
+                else:
+                    self.expandedFiles.append(file)
 
-        if self.ev3DirName:
-            self.button_left.config(state='normal')
-            self.fileMenu2.entryconfig("Expanded directory to EV3 file", state="normal")
+            if self.ev3DirName:
+                self.button_left.config(state='normal')
+                self.fileMenu2.entryconfig("Expanded directory to EV3 file", state="normal")
 
-        root = self.dirTree.insert('', 'end', text=self.ev3DirName, open=True)
-        self.SUBS(self.ev3DirName, root)
-        self.dirTreeLabel.config(bg='green')
+            root = self.dirTree.insert('', 'end', text=self.ev3DirName, open=True)
+            self.SUBS(self.ev3DirName, root)
+            self.dirTreeLabel.config(bg='green')
+        except:
+            pass
 
     def leftButtonCall(self):
 #        print(self.ev3DirName, " click!")
@@ -191,7 +204,9 @@ class MainApplication(tk.Frame):
                  '',
                  'Created on 01MAR2017 by Kevin Choi (choikk@gmail.com), ',
                  'Team DreamCatchers (#16105) FLL Coach in Maryland',
-                 'Copyright (2017)) Kevin Choi',
+                 'Software Version 0.0.1',
+                 '',
+                 'Copyright (2017) Kevin Choi',
                  'All Rights Reserved',
                  '',
                  'Permission is hereby granted, free of charge, to any person obtaining a ',
@@ -209,11 +224,17 @@ class MainApplication(tk.Frame):
                  'WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.']
 
         l = tk.Label(t,text="\n".join(lines))
-
         l.pack(side="top", fill="both", expand=True, padx=10, pady=10)
         pass
 
     def onPreference(self):
+        t = tk.Toplevel(self)
+        t.wm_title("Preference...")
+        lines = ['Preference comes here...',
+                 '',
+                ]
+        l = tk.Label(t,text="\n".join(lines))
+        l.pack(side="top", fill="both", expand=True, padx=10, pady=10)
         pass
 
     def resource_path(self, relative_path):
