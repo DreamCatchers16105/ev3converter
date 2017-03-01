@@ -6,11 +6,33 @@ import zlib
 from tkinter import filedialog
 from tkinter import ttk
 
+'''
+This program is designed to expand the LEGO EV3 project file into
+small files mostly in ascii format.  Some files still remain in binary
+but all of your programs will be converted to ascii.
+This conversion may be useful if you want to do version control in a
+team environment using GitHub, SVN, or other source code version control
+system.  When you are ready you can convert the directory to a EV3 file
+that you can open in the EV3 software from LEGO
+
+Created on 01MAR2017 by Kevin Choi (choikk@gmail.com)
+Team DreamCatchers (#16105) FLL Coach in Maryland
+
+Software Version 0.0.1
+
+Copyright (2017) Kevin Choi
+All Rights Reserved.
+
+
+For one-file executable, run
+>> pyinstaller myEV3fileConverter.spec
+'''
+
 class MainApplication(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         ''' Initialize the class'''
         tk.Frame.__init__(self, parent, *args, **kwargs)
-        root.iconbitmap('images/Main_icon.ico')
+#        root.iconbitmap('images/Main_icon.ico')
         self.parent = parent
         self.ev3FileName = ""
         self.ev3DirName = ""
@@ -62,24 +84,28 @@ class MainApplication(tk.Frame):
         self.button_left.grid(row=2, column=1)
 
         ## Column 0
-        self.ev3TreeLabel = tk.Label(self, text='EV3 file', relief='ridge', width=30, bg='white')
+        self.ev3TreeLabel = tk.Label(self, text='EV3 file', relief='ridge', width=52, bg='white')
         self.ev3TreeLabel.grid(row=0, column=0, sticky='N',pady=1)
-
 
         self.ev3Tree = ttk.Treeview(self, height=1)
         self.ev3Tree.grid(row=1, column=0, rowspan=3, sticky='N',padx=5, pady=1)
         self.ev3Tree.column("#0", minwidth=200, width=400, stretch="NO")
-        self.ev3Tree.bind("<Double-1>", self.OnDoubleClick)
+        self.ev3Tree.bind("<Double-1>", self.OnDoubleClickL)
+        self.ev3Tree.bind("<Enter>", self.on_enterL)
+        self.ev3Tree.bind("<Leave>", self.on_leaveL)
 
         ## Column 2
-        self.dirTreeLabel = tk.Label(self, text='Expanded files', relief='ridge', width=30, bg='white')
+        self.dirTreeLabel = tk.Label(self, text='Expanded files', relief='ridge', width=52, bg='white')
         self.dirTreeLabel.grid(row=0, column=2, sticky='N',pady=1)
 
         self.dirTree = ttk.Treeview(self, height=20)
         self.dirTree.grid(row=1, column=2, rowspan=3,padx=5, pady=1)
         self.dirTree.column("#0", minwidth=200, width=400, stretch="NO")
+        self.dirTree.bind("<Double-1>", self.OnDoubleClickR)
+        self.dirTree.bind("<Enter>", self.on_enterR)
+        self.dirTree.bind("<Leave>", self.on_leaveR)
 
-    def OnDoubleClick(self, event):
+    def OnDoubleClickL(self, event):
         newev3FileName = filedialog.asksaveasfile(mode='w', defaultextension=".ev3")
         try:
             self.ev3FileName = newev3FileName.name
@@ -88,12 +114,15 @@ class MainApplication(tk.Frame):
             self.ev3Tree.insert('', 'end', text=self.ev3FileName, open=True)
             if os.stat(self.ev3FileName).st_size > 0:
                 self.button_right.config(state='normal')
-                self.ev3TreeLabel.config(bg='green')
+                self.ev3TreeLabel.config(bg='#ADFF2F')
             else:
                 self.button_right.config(state='disabled')
                 self.ev3TreeLabel.config(bg='yellow')
         except:
             pass
+
+    def OnDoubleClickR(self, event):
+        self.onOpenDir()
 
     def SUBS(self, path, parent):
         for p in os.listdir(path):
@@ -109,7 +138,7 @@ class MainApplication(tk.Frame):
             if os.stat(self.ev3FileName).st_size > 0:
                 self.button_right.config(state='normal')
                 self.fileMenu2.entryconfig("EV3 file to Expand", state="normal")
-                self.ev3TreeLabel.config(bg='green')
+                self.ev3TreeLabel.config(bg='#ADFF2F')
         except:
             pass
 
@@ -129,7 +158,7 @@ class MainApplication(tk.Frame):
 
             root = self.dirTree.insert('', 'end', text=self.ev3DirName, open=True)
             self.SUBS(self.ev3DirName, root)
-            self.dirTreeLabel.config(bg='green')
+            self.dirTreeLabel.config(bg='#ADFF2F')
         except:
             pass
 
@@ -144,7 +173,7 @@ class MainApplication(tk.Frame):
                 if os.stat(self.ev3FileName).st_size > 0:
                     self.button_right.config(state='normal')
                     self.fileMenu2.entryconfig("EV3 file to Expand", state="normal")
-                    self.ev3TreeLabel.config(bg='green')
+                    self.ev3TreeLabel.config(bg='#ADFF2F')
             else:
                 self.button_right.config(state='disabled')
                 self.fileMenu2.entryconfig("EV3 file to Expand", state="disabled")
@@ -163,7 +192,7 @@ class MainApplication(tk.Frame):
         if os.stat(self.ev3FileName).st_size > 0:
             self.button_right.config(state='normal')
             self.fileMenu2.entryconfig("EV3 file to Expand", state="normal")
-            self.ev3TreeLabel.config(bg='green')
+            self.ev3TreeLabel.config(bg='#ADFF2F')
 
     def rightButtonCall(self):
         self.dirTree.delete(*self.dirTree.get_children())
@@ -188,7 +217,7 @@ class MainApplication(tk.Frame):
         self.SUBS(newpath, root)
         self.button_left.config(state='normal')
         self.fileMenu2.entryconfig("Expanded directory to EV3 file", state="normal")
-        self.dirTreeLabel.config(bg='green')
+        self.dirTreeLabel.config(bg='#ADFF2F')
 
 
     def onAbout(self):
@@ -239,13 +268,25 @@ class MainApplication(tk.Frame):
 
     def resource_path(self, relative_path):
         """ Get absolute path to resource, works for dev and for PyInstaller """
-#        try:
-#            # PyInstaller creates a temp folder and stores path in _MEIPASS
-#            base_path = sys._MEIPASS
-#        except Exception:
-        base_path = os.path.abspath("./images")
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath("./images")
         return os.path.join(base_path, relative_path)
 
+
+    def on_enterL(self, event):
+        self.ev3TreeLabel.configure(text="Double click to assign a new file name")
+
+    def on_leaveL(self, enter):
+        self.ev3TreeLabel.configure(text="EV3 file")
+
+    def on_enterR(self, event):
+        self.dirTreeLabel.configure(text="Double click to open an expanded directory")
+
+    def on_leaveR(self, enter):
+        self.dirTreeLabel.configure(text="Expanded files")
 
     def onExit(self):
         self.quit()
