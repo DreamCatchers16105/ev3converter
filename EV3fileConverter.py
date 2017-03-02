@@ -4,6 +4,7 @@ import tkinter as tk
 import zipfile
 import zlib
 from tkinter import filedialog
+from tkinter import font
 from tkinter import ttk
 
 '''
@@ -18,7 +19,7 @@ that you can open in the EV3 software from LEGO
 Created on 01MAR2017 by Kevin Choi (choikk@gmail.com)
 Team DreamCatchers (#16105) FLL Coach in Maryland
 
-Software Version 0.0.1
+Software Version 0.1.2
 
 Copyright (2017) Kevin Choi
 All Rights Reserved.
@@ -40,7 +41,14 @@ class MainApplication(tk.Frame):
         self.fileMenu1 = ""
         self.fileMenu2 = ""
         self.fileMenu3 = ""
-        self.parent.geometry("875x480+400+400")
+        self.parent.geometry("875x485+250+250")
+
+        cfont = font.Font(family="Consolas", size=10, weight="normal")
+        self.char_size = cfont.measure("a")
+        self.bind("<Configure>", self.on_resize)
+        self.height = self.winfo_reqheight()
+        self.width = self.winfo_reqwidth()
+        self.label_width = round((self.width - 42) * 0.5 / self.char_size)
         self.initUI()
 
     def initUI(self):
@@ -52,6 +60,7 @@ class MainApplication(tk.Frame):
         self.parent.config(menu=menubar)
 
         self.fileMenu1 = tk.Menu(menubar)
+        self.fileMenu1.add_command(label="New EV3 File...", command=self.onNewFile)
         self.fileMenu1.add_command(label="Open EV3 File...", command=self.onOpenFile)
         self.fileMenu1.add_command(label="Open EV3 Dir...", command=self.onOpenDir)
         self.fileMenu1.add_command(label="Exit", command=self.onExit)
@@ -74,39 +83,61 @@ class MainApplication(tk.Frame):
         self.tmp_right_img = tk.PhotoImage(file=rightpath)
         self.button_right = tk.Button(self, text="Expand", image=self.tmp_right_img, command=lambda: self.rightButtonCall(),
                                       compound="top", height=75, width=40, state='disabled')
-        self.button_right.grid(row=1, column=1)
+        self.button_right.grid(row=3, column=2)
+        self.tempLabel = tk.Label(self, text=None, relief=None, width=round(40/self.char_size), bg=None)
+        self.tempLabel.grid(row=0, column=2, sticky='N',pady=1)
+
+        self.button_ev3new = tk.Button(self, text="New..",
+                                      command=lambda: self.onNewFile(),
+                                      compound="top", height=1, width=5, state='normal')
+        self.button_ev3new.grid(row=1, column=0, sticky='NW', padx=5, pady=1)
+
+        self.button_ev3open = tk.Button(self, text="Open..",
+                                      command=lambda: self.onOpenFile(),
+                                      compound="top", height=1, width=5, state='normal')
+        self.button_ev3open.grid(row=1, column=1, sticky='NW', padx=5, pady=1)
+
+        self.button_diropen = tk.Button(self, text="Open Dir..",
+                                      command=lambda: self.onOpenDir(),
+                                      compound="top", height=1, width=8, state='normal')
+        self.button_diropen.grid(row=1, column=3, sticky='NW', padx=5, pady=1)
 
         # Convert button: to the left
         leftpath = self.resource_path("left.gif")
         self.tmp_left_img = tk.PhotoImage(file=leftpath)
         self.button_left = tk.Button(self, text="To EV3", image=self.tmp_left_img, command=lambda: self.leftButtonCall(),
                                      compound="top", height=75, width=40, state='disabled')
-        self.button_left.grid(row=2, column=1)
+        self.button_left.grid(row=4, column=2)
 
         ## Column 0
-        self.ev3TreeLabel = tk.Label(self, text='EV3 file', relief='ridge', width=52, bg='white')
-        self.ev3TreeLabel.grid(row=0, column=0, sticky='N',pady=1)
+        self.ev3TreeLabel = tk.Label(self, text='EV3 file', relief='ridge', width=self.label_width, bg='white')
+        self.ev3TreeLabel.grid(row=0, column=0, columnspan=2, sticky='WNE',padx=5,pady=1)
 
         self.ev3Tree = ttk.Treeview(self, height=1)
-        self.ev3Tree.grid(row=1, column=0, rowspan=3, sticky='N',padx=5, pady=1)
-        self.ev3Tree.column("#0", minwidth=200, width=400, stretch="NO")
-        self.ev3Tree.bind("<Double-1>", self.OnDoubleClickL)
-        self.ev3Tree.bind("<Enter>", self.on_enterL)
-        self.ev3Tree.bind("<Leave>", self.on_leaveL)
+        self.ev3Tree.grid(row=2, column=0, rowspan=3, columnspan=2, sticky='NWE',padx=5, pady=1)
+        self.ev3Tree.column('#0', minwidth=20, width=50, stretch=True)
+        # self.ev3Tree.bind("<Button-1>", self.onOpenFileTree)
+        # self.ev3Tree.bind("<Double-1>", self.onDoubleClickL)
+        # self.ev3Tree.bind("<Enter>", self.on_enterL)
+        # self.ev3Tree.bind("<Leave>", self.on_leaveL)
+        self.ev3Tree.grid_columnconfigure(0, weight=2)
+        self.ev3Tree.tag_configure('0', background='orange')
 
         ## Column 2
-        self.dirTreeLabel = tk.Label(self, text='Expanded files', relief='ridge', width=52, bg='white')
-        self.dirTreeLabel.grid(row=0, column=2, sticky='N',pady=1)
+        self.dirTreeLabel = tk.Label(self, text='Expanded files', relief='ridge', width=self.label_width, bg='white')
+        self.dirTreeLabel.grid(row=0, column=3, sticky='WNE', padx=5, pady=1)
 
         self.dirTree = ttk.Treeview(self, height=20)
-        self.dirTree.grid(row=1, column=2, rowspan=3,padx=5, pady=1)
-        self.dirTree.column("#0", minwidth=200, width=400, stretch="NO")
-        self.dirTree.bind("<Double-1>", self.OnDoubleClickR)
-        self.dirTree.bind("<Enter>", self.on_enterR)
-        self.dirTree.bind("<Leave>", self.on_leaveR)
+        self.dirTree.grid(row=2, column=3, rowspan=60, sticky='WEN',padx=5, pady=1)
+        self.dirTree.column("#0", minwidth=20, width=50, stretch=True)
+        # self.dirTree.bind("<Button-1>", self.onOpenDirTree)
+        # self.dirTree.bind("<Double-1>", self.onDoubleClickR)
+        # self.dirTree.bind("<Enter>", self.on_enterR)
+        # self.dirTree.bind("<Leave>", self.on_leaveR)
+        self.dirTree.grid_columnconfigure(0, weight=2)
 
-    def OnDoubleClickL(self, event):
-        newev3FileName = filedialog.asksaveasfile(mode='w', defaultextension=".ev3")
+    def onNewFile(self):
+        newev3FileName = filedialog.asksaveasfile(mode='w', title='New EV3 file',filetypes=[("EV3 file",".ev3")],defaultextension=".ev3")
         try:
             self.ev3FileName = newev3FileName.name
 
@@ -121,7 +152,23 @@ class MainApplication(tk.Frame):
         except:
             pass
 
-    def OnDoubleClickR(self, event):
+    def onDoubleClickL(self, event):
+        newev3FileName = filedialog.asksaveasfile(mode='w', filetypes=[("EV3 file",".ev3")],defaultextension=".ev3")
+        try:
+            self.ev3FileName = newev3FileName.name
+
+            self.ev3Tree.delete(*self.ev3Tree.get_children())
+            self.ev3Tree.insert('', 'end', text=self.ev3FileName, open=True)
+            if os.stat(self.ev3FileName).st_size > 0:
+                self.button_right.config(state='normal')
+                self.ev3TreeLabel.config(bg='#ADFF2F')
+            else:
+                self.button_right.config(state='disabled')
+                self.ev3TreeLabel.config(bg='yellow')
+        except:
+            pass
+
+    def onDoubleClickR(self, event):
         self.onOpenDir()
 
     def SUBS(self, path, parent):
@@ -131,14 +178,48 @@ class MainApplication(tk.Frame):
             if os.path.isdir(abspath):
                 self.SUBS(abspath, parent_element)
 
-    def onOpenFile(self):
+    def onOpenFileTree(self, event):
         self.ev3FileName = filedialog.askopenfilename(filetypes=(("EV3 files", "*.ev3"), ("All files", ("*.*"))))
-        self.ev3Tree.insert('', 'end', text=self.ev3FileName, open=True)
+
         try:
+
+            self.ev3Tree.insert('', 'end', text=self.ev3FileName, open=True)
             if os.stat(self.ev3FileName).st_size > 0:
                 self.button_right.config(state='normal')
                 self.fileMenu2.entryconfig("EV3 file to Expand", state="normal")
                 self.ev3TreeLabel.config(bg='#ADFF2F')
+        except:
+            pass
+
+    def onOpenFile(self):
+        self.ev3FileName = filedialog.askopenfilename(filetypes=(("EV3 files", "*.ev3"), ("All files", ("*.*"))))
+
+        try:
+            self.ev3Tree.insert('', 'end', text=self.ev3FileName, open=True)
+            if os.stat(self.ev3FileName).st_size > 0:
+                self.button_right.config(state='normal')
+                self.fileMenu2.entryconfig("EV3 file to Expand", state="normal")
+                self.ev3TreeLabel.config(bg='#ADFF2F')
+        except:
+            pass
+
+    def onOpenDirTree(self, event):
+        self.ev3DirName = filedialog.askdirectory()
+
+        try:
+            for file in os.listdir(self.ev3DirName):
+                if file.startswith("."):
+                    pass
+                else:
+                    self.expandedFiles.append(file)
+
+            if self.ev3DirName:
+                self.button_left.config(state='normal')
+                self.fileMenu2.entryconfig("Expanded directory to EV3 file", state="normal")
+
+            root = self.dirTree.insert('', 'end', text=self.ev3DirName, open=True)
+            self.SUBS(self.ev3DirName, root)
+            self.dirTreeLabel.config(bg='#ADFF2F')
         except:
             pass
 
@@ -233,7 +314,7 @@ class MainApplication(tk.Frame):
                  '',
                  'Created on 01MAR2017 by Kevin Choi (choikk@gmail.com), ',
                  'Team DreamCatchers (#16105) FLL Coach in Maryland',
-                 'Software Version 0.0.1',
+                 'Software Version 0.1.2',
                  '',
                  'Copyright (2017) Kevin Choi',
                  'All Rights Reserved',
@@ -287,6 +368,20 @@ class MainApplication(tk.Frame):
 
     def on_leaveR(self, enter):
         self.dirTreeLabel.configure(text="Expanded files")
+
+    def on_resize(self,event):
+        # determine the ratio of old width/height to new width/height
+        self.width = event.width
+        self.height = event.height
+        # resize the canvas
+        self.config(width=self.width, height=self.height)
+        self.label_width  = round((self.width - 43) * 0.5 / self.char_size)
+        self.label_height = round((self.height/ self.char_size))
+        # rescale all the objects tagged with the "all" tag
+#        self.scale("all",0,0,wscale,hscale)
+        self.ev3TreeLabel.config(width=self.label_width)
+        self.dirTreeLabel.config(width=self.label_width-5)
+
 
     def onExit(self):
         self.quit()
