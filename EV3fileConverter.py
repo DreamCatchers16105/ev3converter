@@ -6,6 +6,7 @@ import zlib
 from tkinter import filedialog
 from tkinter import font
 from tkinter import ttk
+from PIL import Image, ImageTk
 
 '''
 This program is designed to expand the LEGO EV3 project file into
@@ -26,7 +27,11 @@ All Rights Reserved.
 
 
 For one-file executable, run
->> pyinstaller myEV3fileConverter.spec
+(for Windows)
+>> pyinstaller myEV3fileConverterWin64.spec
+or
+(for OSX)
+>> pyinstaller myEV3fileConverterOSX.spec
 '''
 
 class MainApplication(tk.Frame):
@@ -46,9 +51,13 @@ class MainApplication(tk.Frame):
         cfont = font.Font(family="Consolas", size=10, weight="normal")
         self.char_size = cfont.measure("a")
         self.bind("<Configure>", self.on_resize)
-        self.height = self.winfo_reqheight()
-        self.width = self.winfo_reqwidth()
-        self.label_width = round((self.width - 42) * 0.5 / self.char_size)
+        self.height = 485
+        self.width = 875
+
+#        self.height = self.winfo_reqheight()
+#        self.width = self.winfo_reqwidth()
+        self.label_width = round((self.width - 43) * 0.32 / self.char_size)
+#        print (self.char_size, self.width, self.label_width)
         self.initUI()
 
     def initUI(self):
@@ -121,13 +130,12 @@ class MainApplication(tk.Frame):
         # self.ev3Tree.bind("<Enter>", self.on_enterL)
         # self.ev3Tree.bind("<Leave>", self.on_leaveL)
         self.ev3Tree.grid_columnconfigure(0, weight=2)
-        self.ev3Tree.tag_configure('0', background='orange')
 
         ## Column 2
         self.dirTreeLabel = tk.Label(self, text='Expanded files', relief='ridge', width=self.label_width, bg='white')
         self.dirTreeLabel.grid(row=0, column=3, sticky='WNE', padx=5, pady=1)
 
-        self.dirTree = ttk.Treeview(self, height=20)
+        self.dirTree = ttk.Treeview(self, height=22)
         self.dirTree.grid(row=2, column=3, rowspan=60, sticky='WEN',padx=5, pady=1)
         self.dirTree.column("#0", minwidth=20, width=50, stretch=True)
         # self.dirTree.bind("<Button-1>", self.onOpenDirTree)
@@ -135,6 +143,13 @@ class MainApplication(tk.Frame):
         # self.dirTree.bind("<Enter>", self.on_enterR)
         # self.dirTree.bind("<Leave>", self.on_leaveR)
         self.dirTree.grid_columnconfigure(0, weight=2)
+
+#       logo = Image.open(self.resource_path("DreamCatchers_Logo_512.jpg"))
+#        photo = ImageTk.PhotoImage(logo)
+
+#        self.label = tk.Label(image=photo)
+#        self.label.image = photo  # keep a reference!
+#        self.label.grid(row=2, column=0, sticky='WN',padx=5, pady=1)
 
     def onNewFile(self):
         newev3FileName = filedialog.asksaveasfile(mode='w', title='New EV3 file',filetypes=[("EV3 file",".ev3")],defaultextension=".ev3")
@@ -247,7 +262,7 @@ class MainApplication(tk.Frame):
 #        print(self.ev3DirName, " click!")
         if self.ev3FileName == "":
             self.ev3FileName = self.ev3DirName + ".ev3"
-#            print(self.ev3FileName, " click!")
+            print(self.ev3FileName, " click!")
             self.ev3Tree.delete(*self.ev3Tree.get_children())
             self.ev3Tree.insert('', 'end', text=self.ev3FileName, open=True)
             if os.path.isfile(self.ev3FileName):
@@ -373,15 +388,19 @@ class MainApplication(tk.Frame):
         # determine the ratio of old width/height to new width/height
         self.width = event.width
         self.height = event.height
+
         # resize the canvas
         self.config(width=self.width, height=self.height)
-        self.label_width  = round((self.width - 43) * 0.5 / self.char_size)
+
+        # TODO I don't understand why Windows and OSX have different width dimension.
+        self.label_width  = round((self.width - 43) * 0.32/ self.char_size)
         self.label_height = round((self.height/ self.char_size))
         # rescale all the objects tagged with the "all" tag
 #        self.scale("all",0,0,wscale,hscale)
         self.ev3TreeLabel.config(width=self.label_width)
-        self.dirTreeLabel.config(width=self.label_width-5)
+        self.dirTreeLabel.config(width=self.label_width-3)
 
+#        print (self.width / self.char_size, self.height / self.char_size, self.label_width, self.label_height)
 
     def onExit(self):
         self.quit()
